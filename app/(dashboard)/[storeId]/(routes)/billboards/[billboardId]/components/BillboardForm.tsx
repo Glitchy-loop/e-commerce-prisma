@@ -1,7 +1,6 @@
 "use client"
 
 import { AlertModal } from "@/components/modals/alert-modal"
-import { ApiAlert } from "@/components/ui/api-alert"
 import { Button } from "@/components/ui/button"
 import {
   Form,
@@ -85,7 +84,7 @@ const BillboardForm: React.FC<BillboardFormProps> = ({ initialData }) => {
         `/api/${params.storeId}/billboards/${params.billboardId}`
       )
       router.refresh()
-      router.push("/")
+      router.push(`/${params.storeId}/billboards`)
 
       toast.success(`Billboard deleted`)
     } catch (error) {
@@ -173,7 +172,6 @@ const BillboardForm: React.FC<BillboardFormProps> = ({ initialData }) => {
           </Button>
         </form>
       </Form>
-      <Separator />
     </>
   )
 }
