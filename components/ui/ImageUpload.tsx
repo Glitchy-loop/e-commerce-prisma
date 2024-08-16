@@ -1,4 +1,5 @@
 "use client"
+
 import { useEffect, useState } from "react"
 import { Button } from "./button"
 import { ImagePlus, Trash } from "lucide-react"
@@ -7,9 +8,9 @@ import { CldUploadWidget } from "next-cloudinary"
 
 interface ImageUploadProps {
   disabled: boolean
-  onChange: (value: string) => void
+  onChange: (value: string[]) => void // Expecting an array of URLs
   onRemove: (value: string) => void
-  value: string[]
+  value: string[] // Array of URLs
 }
 
 const ImageUpload: React.FC<ImageUploadProps> = ({
@@ -19,6 +20,7 @@ const ImageUpload: React.FC<ImageUploadProps> = ({
   value,
 }) => {
   const [isMounted, setIsMounted] = useState(false)
+  const [uploadedImages, setUploadedImages] = useState<string[]>(value)
 
   useEffect(() => {
     setIsMounted(true)
@@ -26,7 +28,14 @@ const ImageUpload: React.FC<ImageUploadProps> = ({
 
   const onUpload = (result: any) => {
     if (result?.info?.secure_url) {
-      onChange(result.info.secure_url) // Pass the secure URL to the parent component or form.
+      const newImageUrl = result.info.secure_url
+      setUploadedImages((prevImages) => {
+        const updatedImageUrls = [...prevImages, newImageUrl]
+
+        onChange(updatedImageUrls) // Pass the updated array of URLs
+
+        return updatedImageUrls
+      })
     }
   }
 
@@ -37,7 +46,7 @@ const ImageUpload: React.FC<ImageUploadProps> = ({
   return (
     <div>
       <div className="mt-4 flex items-center gap-4">
-        {value.map((url) => (
+        {uploadedImages.map((url) => (
           <div
             key={url}
             className="relative w-[200px] h-[200px] rounded-md overflow-hidden"
@@ -45,19 +54,33 @@ const ImageUpload: React.FC<ImageUploadProps> = ({
             <div className="z-10 absolute top-2 right-2">
               <Button
                 type="button"
-                onClick={() => onRemove(url)}
+                onClick={() => {
+                  setUploadedImages((prevImages) => {
+                    const updatedImageUrls = prevImages.filter(
+                      (imageUrl) => imageUrl !== url
+                    )
+                    onChange(updatedImageUrls) // Pass the updated array of URLs
+                    return updatedImageUrls
+                  })
+                  onRemove(url)
+                }}
                 variant="destructive"
                 size="icon"
               >
                 <Trash className="h-4 w-4" />
               </Button>
             </div>
-            asdasd
             <Image fill className="object-cover" alt="Image" src={url} />
           </div>
         ))}
       </div>
-      <CldUploadWidget onSuccess={onUpload} uploadPreset="ecommerce">
+      <CldUploadWidget
+        onSuccess={onUpload}
+        uploadPreset="ecommerce"
+        options={{
+          multiple: true, // Enable multiple file uploads
+        }}
+      >
         {({ open }) => {
           const onClick = () => {
             open()

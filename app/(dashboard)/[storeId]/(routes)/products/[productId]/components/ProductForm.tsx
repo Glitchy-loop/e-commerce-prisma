@@ -36,7 +36,7 @@ import * as z from "zod"
 interface ProductFormProps {
   initialData:
     | (Product & {
-        images: Image[]
+        images: { url: string }[] // Adjust based on how images are structured
       })
     | null
   categories: Category[]
@@ -46,7 +46,7 @@ interface ProductFormProps {
 
 const formSchema = z.object({
   name: z.string().min(1, "Name is required to be at least 1 character long"),
-  images: z.object({ url: z.string() }).array(),
+  images: z.array(z.string()),
   price: z.coerce.number().min(0, "Price must be a positive number"),
   categoryId: z.string().min(1, "Category is required"),
   sizeId: z.string().min(1, "Size is required"),
@@ -79,6 +79,7 @@ const ProductForm: React.FC<ProductFormProps> = ({
       ? {
           ...initialData,
           price: parseFloat(String(initialData?.price)),
+          images: initialData.images.map((image) => image.url),
         }
       : {
           name: "",
@@ -170,16 +171,15 @@ const ProductForm: React.FC<ProductFormProps> = ({
                 <FormLabel>Images</FormLabel>
                 <FormControl>
                   <ImageUpload
-                    value={field.value.map((image) => image.url)}
+                    value={field.value} // Provide the array of image URLs
                     disabled={loading}
-                    onChange={(url) =>
-                      field.onChange([...field.value, { url }])
-                    }
-                    onRemove={(url) =>
-                      field.onChange([
-                        ...field.value.filter((image) => image.url !== url),
-                      ])
-                    }
+                    onChange={(urls) => field.onChange(urls)} // Update the form state with the array of URLs
+                    onRemove={(url) => {
+                      const updatedImages = field.value.filter(
+                        (image) => image !== url
+                      )
+                      field.onChange(updatedImages)
+                    }}
                   />
                 </FormControl>
                 <FormMessage />
